@@ -10,7 +10,7 @@ fn get_input() -> String {
     data
 }
 
-fn main() {
+fn part1() {
     let input_raw = get_input();
     let input = input_raw.split("\n");
 
@@ -40,4 +40,41 @@ fn main() {
     }
 
     println!("{}", sum);
+}
+
+fn part2() {
+    let input_raw = get_input();
+    let input = input_raw.split("\n");
+
+    let mut strategy = HashMap::new();
+
+    // A X ROCK, LOSE
+    // B Y PAPER, DRAW
+    // C Z SCISSOR, WIN
+
+    strategy.insert("A X", 0 + 3); // scissor
+    strategy.insert("A Y", 3 + 1); // rock
+    strategy.insert("A Z", 6 + 2); // paper
+
+    strategy.insert("B X", 0 + 1); // rock
+    strategy.insert("B Y", 3 + 2); // paper
+    strategy.insert("B Z", 6 + 3); // scissor
+
+    strategy.insert("C X", 0 + 2); // paper
+    strategy.insert("C Y", 3 + 3); // scissor
+    strategy.insert("C Z", 6 + 1); // rock
+
+    let mut sum = 0;
+    for i in input.into_iter() {
+        if let Some(point) = strategy.get(i) {
+            sum += point
+        }
+    }
+
+    println!("{}", sum);
+}
+
+fn main() {
+    part1();
+    part2();
 }
