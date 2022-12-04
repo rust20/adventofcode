@@ -28,8 +28,6 @@ fn part1() {
         let mut check_left = vec![false; 52];
         let mut dup = 0;
 
-        let mut tmp = 0 as char;
-
         let comp_size = i.len() / 2 as usize;
         let k: Vec<char> = i.chars().collect();
 
@@ -45,12 +43,10 @@ fn part1() {
 
             if check_left[rank_right] {
                 dup = rank_right;
-                tmp = char::from_u32(item_right as u32).unwrap();
                 break;
             }
             if check_right[rank_left] {
                 dup = rank_left;
-                tmp = char::from_u32(item_left as u32).unwrap();
                 break;
             }
         }
@@ -78,42 +74,28 @@ fn part2() {
 
     let mut sum = 0;
 
-    for i in input.into_iter() {
-        let mut check_right = vec![false; 52];
-        let mut check_left = vec![false; 52];
-        let mut dup = 0;
+    let all_group: Vec<&str> = input.collect();
+    let mut group: usize = 0;
 
-        let mut tmp = 0 as char;
+    let group_n: usize = 3;
 
-        let comp_size = i.len() / 2 as usize;
-        let k: Vec<char> = i.chars().collect();
+    while group < all_group.len() - 1 {
+        let mut check = vec![vec![false; group_n]; 52];
 
-        for ch_index in 0..comp_size {
-            let item_left = k[ch_index] as i32;
-            let item_right = k[ch_index + comp_size] as i32;
-
-            let rank_left = to_rank(item_left);
-            let rank_right = to_rank(item_right);
-
-            check_left[rank_left] = true;
-            check_right[rank_right] = true;
-
-            if check_left[rank_right] {
-                dup = rank_right;
-                tmp = char::from_u32(item_right as u32).unwrap();
-                break;
+        for ch_index in 0..group_n {
+            for x in all_group[group + ch_index].chars().into_iter() {
+                check[to_rank(x as u32)][ch_index] = true;
             }
-            if check_right[rank_left] {
-                dup = rank_left;
-                tmp = char::from_u32(item_left as u32).unwrap();
+        }
+
+        for i in 0..52 {
+            if check[i].iter().fold(true, |acc, item| acc && *item) {
+                sum += i + 1;
                 break;
             }
         }
 
-        sum += dup;
-        if comp_size != 0 {
-            sum += 1;
-        }
+        group += group_n;
     }
 
     println!("{}", sum);
