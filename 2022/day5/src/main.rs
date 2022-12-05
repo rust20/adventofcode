@@ -10,7 +10,7 @@ fn get_input() -> String {
     data
 }
 
-fn part1() {
+fn get_crate_and_moves() -> (Vec<Vec<char>>, Vec<String>) {
     let input_raw = get_input();
     let input = input_raw.split("\n");
 
@@ -23,14 +23,14 @@ fn part1() {
         .into_iter()
         .map(|x| x.chars().collect::<Vec<char>>())
         .collect();
-    let moves = tmp.next().unwrap();
-
-    let mut col: usize = 0;
+    let moves = tmp
+        .next()
+        .unwrap()
+        .into_iter()
+        .map(|x| x.to_string())
+        .collect();
 
     let crates_index = crates.last().unwrap();
-
-    let col_length = crates_index.len();
-    let row_length = crates.len();
 
     let max_crate = crates_index
         .into_iter()
@@ -42,8 +42,10 @@ fn part1() {
 
     let mut crate_stack = vec![Vec::new(); max_crate as usize];
 
+    let col_length = crates_index.len();
+    let row_length = crates.len();
+    let mut col: usize = 0;
     let mut crate_i: usize = 0;
-
     // generate stack of crates
     while col < col_length {
         if crates.last().unwrap()[col] == ' ' {
@@ -64,15 +66,19 @@ fn part1() {
         col += 1;
     }
 
+    (crate_stack, moves)
+}
+
+fn part1() {
+    let (mut crate_stack, moves) = get_crate_and_moves();
+
     for i in 0..crate_stack.len() {
         println!("{} {:?}", i + 1, crate_stack[i]);
     }
 
-    // let re = Regex::new(r"(\d{4})-(\d{2})-(\d{2})").unwrap();
     let re = Regex::new(r"move (\d+) from (\d+) to (\d+)").unwrap();
     for instruction in moves {
-        let cap = re.captures(instruction).unwrap();
-        println!("move: {} from: {} to: {}", &cap[1], &cap[2], &cap[3]);
+        let cap = re.captures(&instruction).unwrap();
         let move_times = cap[1].parse::<i32>().unwrap();
         let from = cap[2].parse::<usize>().unwrap();
         let to = cap[3].parse::<usize>().unwrap();
@@ -86,12 +92,34 @@ fn part1() {
     let res: String = crate_stack.iter().map(|x| x.last().unwrap()).collect();
 
     println!("{}", res);
+}
 
-    println!("{:?}", crate_stack);
-    // println!("{:?}", crates);
-    // println!("{:?}", moves);
+fn part2() {
+    let (mut crate_stack, moves) = get_crate_and_moves();
+
+    let re = Regex::new(r"move (\d+) from (\d+) to (\d+)").unwrap();
+    for instruction in moves {
+        let cap = re.captures(&instruction).unwrap();
+        let move_times = cap[1].parse::<i32>().unwrap();
+        let from = cap[2].parse::<usize>().unwrap();
+        let to = cap[3].parse::<usize>().unwrap();
+
+        let l = crate_stack[from - 1].len();
+        for i in (0..move_times).rev() {
+            let k = crate_stack[from - 1][l - 1 - i as usize];
+            crate_stack[to - 1].push(k);
+        }
+        (0..move_times).for_each(|_| {
+            crate_stack[from - 1].pop();
+        });
+    }
+
+    let res: String = crate_stack.iter().map(|x| x.last().unwrap()).collect();
+
+    println!("{}", res);
 }
 
 fn main() {
     part1();
+    part2();
 }
