@@ -57,36 +57,9 @@ fn get_input() -> String {
     data
 }
 
-fn part1(input_raw: String) -> u32 {
+fn create_tree(input_raw: String) -> Node {
     let input = input_raw.split("\n");
     let mut command_iter = input.into_iter();
-
-    // let mut traverse = |node: Node| {
-    //     let tree_node = node.as_ref().borrow();
-    //     println!("0");
-    //     match tree_node.val.clone() {
-    //         FileType::Directory(name) => {
-    //             let curr_sum = tree_node.children.iter().fold(0, |acc, val| {
-    //                 let res = traverse(Rc::clone(val));
-    //                 println!("{}", acc);
-    //                 acc + (res)
-    //             });
-    //             println!("> {} {}", name.clone(), curr_sum);
-    //             if curr_sum <= LIMIT {
-    //                 sum += curr_sum;
-    //             }
-    //             curr_sum
-    //         }
-    //         FileType::File(name, f) => {
-    //             println!("visited {} {}", name.clone(), f);
-    //             if f <= LIMIT {
-    //                 f
-    //             } else {
-    //                 0
-    //             }
-    //         }
-    //     }
-    // };
 
     let mut stack = Vec::new();
     let root = TreeNode::new(FileType::Directory("/".to_string()));
@@ -151,14 +124,62 @@ fn part1(input_raw: String) -> u32 {
 
         continue;
     }
+    root
+}
 
+fn part1(input_raw: String) -> u32 {
+    let root = create_tree(input_raw);
     traverse_limit(root, 0).1
 }
 
-fn part2(input_raw: String) -> i32 {
-    let input = input_raw.chars();
-    let res = input.count();
-    res as i32
+fn total_size(node: Node) -> u32 {
+    let tree_node = node.as_ref().borrow();
+    match tree_node.val.clone() {
+        FileType::Directory(_) => tree_node
+            .children
+            .iter()
+            .fold(0, |acc, val| acc + total_size(val.clone())),
+        FileType::File(_, f) => f,
+    }
+}
+
+fn dir_to_delete(node: Node, current_minimum: u32, disk_to_free: u32) -> (u32, u32, u32) {
+    let tree_node = node.as_ref().borrow();
+    match tree_node.val.clone() {
+        FileType::Directory(name) => {
+            let curr_dir =
+                tree_node
+                    .children
+                    .iter()
+                    .fold((0, current_minimum, disk_to_free), |acc, val| {
+                        let res = dir_to_delete(val.clone(), acc.1, disk_to_free);
+                        (acc.0 + res.0, res.1, res.2)
+                    });
+            if name == "/" {
+                return curr_dir;
+            }
+            (
+                curr_dir.0,
+                (if curr_dir.0 <= curr_dir.1 && curr_dir.0 >= disk_to_free {
+                    curr_dir.0
+                } else {
+                    curr_dir.1
+                }),
+                curr_dir.2,
+            )
+        }
+        FileType::File(_, f) => (f, current_minimum, disk_to_free),
+    }
+}
+
+fn part2(input_raw: String) -> u32 {
+    let root = create_tree(input_raw);
+    let disk_total = 70000000;
+    let disk_used = total_size(root.clone());
+    let disk_free = disk_total - disk_used;
+    let disk_needed = 30000000;
+    let disk_to_free = disk_needed - disk_free;
+    dir_to_delete(root, u32::MAX, disk_to_free).1
 }
 
 fn main() {
@@ -170,11 +191,11 @@ fn main() {
     println!("{} {}", res1, res2);
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn test_part1_case_1() {
-        assert_eq!(part1("bvwbjplbgvbhsrlpgdmjqwftvncz".to_string()), 5);
-    }
-}
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     #[test]
+//     fn test_part1_case_1() {
+//         assert_eq!(part1("bvwbjplbgvbhsrlpgdmjqwftvncz".to_string()), 5);
+//     }
+// }
