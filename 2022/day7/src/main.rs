@@ -29,20 +29,23 @@ impl TreeNode {
 
 const LIMIT: u32 = 100000;
 
-fn traverse_limit(node: Node) -> u32 {
+fn traverse_limit(node: Node, sum: u32) -> (u32, u32) {
     let tree_node = node.as_ref().borrow();
-    match tree_node.val {
-        FileType::Directory(_) => tree_node.children.iter().fold(0, |acc, val| {
-            let res = traverse_limit(Rc::clone(val));
-            acc + (if res <= LIMIT { res } else { 0 })
-        }),
-        FileType::File(_, f) => {
-            if f <= LIMIT {
-                f
-            } else {
-                0
+    match tree_node.val.clone() {
+        FileType::Directory(name) => {
+            let curr_dir = tree_node.children.iter().fold((0, sum), |acc, val| {
+                let res = traverse_limit(val.clone(), acc.1);
+                (acc.0 + res.0, res.1)
+            });
+            if name == "/" {
+                return curr_dir;
             }
+            (
+                curr_dir.0,
+                curr_dir.1 + (if curr_dir.0 <= LIMIT { curr_dir.0 } else { 0 }),
+            )
         }
+        FileType::File(_, f) => (f, sum),
     }
 }
 
@@ -56,35 +59,40 @@ fn get_input() -> String {
 
 fn part1(input_raw: String) -> u32 {
     let input = input_raw.split("\n");
-
     let mut command_iter = input.into_iter();
 
+    // let mut traverse = |node: Node| {
+    //     let tree_node = node.as_ref().borrow();
+    //     println!("0");
+    //     match tree_node.val.clone() {
+    //         FileType::Directory(name) => {
+    //             let curr_sum = tree_node.children.iter().fold(0, |acc, val| {
+    //                 let res = traverse(Rc::clone(val));
+    //                 println!("{}", acc);
+    //                 acc + (res)
+    //             });
+    //             println!("> {} {}", name.clone(), curr_sum);
+    //             if curr_sum <= LIMIT {
+    //                 sum += curr_sum;
+    //             }
+    //             curr_sum
+    //         }
+    //         FileType::File(name, f) => {
+    //             println!("visited {} {}", name.clone(), f);
+    //             if f <= LIMIT {
+    //                 f
+    //             } else {
+    //                 0
+    //             }
+    //         }
+    //     }
+    // };
+
     let mut stack = Vec::new();
-
-    let mut sum = 0;
-
-    let traverse = |node| {
-        let tree_node = node.as_ref().borrow();
-        match tree_node.val {
-            FileType::Directory(_) => tree_node.children.iter().fold(0, |acc, val| {
-                let res = traverse_limit(Rc::clone(val));
-                acc + (if res <= LIMIT { res } else { 0 })
-            }),
-            FileType::File(_, f) => {
-                if f <= LIMIT {
-                    f
-                } else {
-                    0
-                }
-            }
-        }
-    };
-
     let root = TreeNode::new(FileType::Directory("/".to_string()));
 
-    let mut curr = Rc::clone(&root);
+    let mut curr = root.clone();
     while let Some(i) = command_iter.next() {
-        println!("{:?} {:?}", i, 0);
         if i == "" {
             break;
         }
@@ -123,11 +131,11 @@ fn part1(input_raw: String) -> u32 {
             curr = stack.pop().unwrap();
             continue;
         }
-        stack.push(Rc::clone(&curr));
+        stack.push(curr.clone());
 
-        let curr_cloned = Rc::clone(&curr);
+        let curr_cloned = curr.clone();
         let curr_borrowed = curr_cloned.borrow();
-        let result2 = curr_borrowed
+        let result = curr_borrowed
             .children
             .iter()
             .find(|x| {
@@ -139,12 +147,12 @@ fn part1(input_raw: String) -> u32 {
             })
             .unwrap();
 
-        curr = Rc::clone(result2);
+        curr = result.clone();
 
         continue;
     }
 
-    traverse_limit(root)
+    traverse_limit(root, 0).1
 }
 
 fn part2(input_raw: String) -> i32 {
