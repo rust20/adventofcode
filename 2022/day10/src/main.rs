@@ -43,9 +43,40 @@ fn part1(input_raw: String) -> i32 {
 }
 
 fn part2(input_raw: String) -> i32 {
-    let input = input_raw.chars();
-    let res = input.count();
-    res as i32
+    let input = input_raw.split("\n");
+
+    let mut cycle = 0;
+    let mut x = 1;
+
+    for inst in input.into_iter() {
+        if inst.is_empty() {
+            continue;
+        }
+
+        cycle += 1;
+        let mut crt_pos: i32 = (cycle - 1) % 40;
+
+        print!("{}", if (x - crt_pos).abs() < 2 { "#" } else { "." });
+
+        if cycle % 40 == 0 {
+            println!("");
+        }
+
+        if inst == "noop" {
+            continue;
+        }
+        cycle += 1;
+        crt_pos = (cycle - 1) % 40;
+        print!("{}", if (x - crt_pos).abs() < 2 { "#" } else { "." });
+        if cycle % 40 == 0 {
+            println!("");
+        }
+
+        let a: Vec<&str> = inst.split(" ").collect();
+        x += a[1].parse::<i32>().unwrap();
+    }
+
+    0
 }
 
 fn main() {
