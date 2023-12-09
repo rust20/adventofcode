@@ -1,6 +1,7 @@
 use std::cmp::min;
 use std::fs::File;
 use std::io::{BufReader, Read};
+use std::time::Instant;
 
 fn get_input(file_name: &str) -> String {
     let mut data = String::new();
@@ -204,12 +205,15 @@ fn do_vecs_match<T: PartialEq>(a: &Vec<T>, b: &Vec<T>) -> bool {
 }
 
 fn main() {
+    let before = Instant::now();
     let input_raw = get_input("input.txt");
 
     let res1 = part1(input_raw.clone());
     let res2 = part2(input_raw);
 
+
     println!("{} {}", res1, res2);
+    println!("Elapsed time: {:.2?}", before.elapsed());
 }
 
 #[cfg(test)]
