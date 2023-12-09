@@ -51,7 +51,7 @@ fn traverse_limit(node: Node, sum: u32) -> (u32, u32) {
 
 fn get_input() -> String {
     let mut data = String::new();
-    let f = File::open("input.txt").expect("Unable to open file");
+    let f = File::open("tests/d07/input1.txt").expect("Unable to open file");
     let mut br = BufReader::new(f);
     br.read_to_string(&mut data).expect("Unable to read string");
     data
