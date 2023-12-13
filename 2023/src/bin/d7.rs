@@ -1,6 +1,3 @@
-#![feature(test)]
-extern crate test;
-
 #[derive(Debug, PartialEq, PartialOrd)]
 enum Type {
     HC,       // everything else
@@ -181,23 +178,10 @@ fn part2(inp: &str) {
     println!("part 2: {}", sum);
 }
 
+#[allow(dead_code)]
 fn main() {
     let fi = "tests/d7/input1.txt";
     let reader = std::fs::read_to_string(fi).expect("read input");
     part1(&reader);
     part2(&reader);
-}
-
-#[bench]
-fn pt1(b: &mut test::Bencher) {
-    let fi = "tests/d7/input1.txt";
-    let reader = std::fs::read_to_string(fi).expect("read input");
-    b.iter(|| part1(&reader))
-}
-
-#[bench]
-fn pt2(b: &mut test::Bencher) {
-    let fi = "tests/d7/input1.txt";
-    let reader = std::fs::read_to_string(fi).expect("read input");
-    b.iter(|| part2(&reader))
 }

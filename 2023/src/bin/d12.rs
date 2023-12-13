@@ -1,14 +1,5 @@
 use std::time::Instant;
 
-fn matchstr(a: &Vec<char>, b: &str) -> bool {
-    // if a.len() > b.len() {
-    //     return false;
-    // }
-    a.iter()
-        .enumerate()
-        .all(|(i, &val)| b.chars().nth(i).unwrap() == '?' || b.chars().nth(i).unwrap() == val)
-}
-
 fn correct(rows: &String, seq: &Vec<usize>) -> bool {
     let mut target = Vec::new();
     let mut current = 0;
@@ -78,8 +69,7 @@ pub fn part1(inp: &str) -> i64 {
 }
 
 pub fn part2(inp: &str) -> i64 {
-    let mut sum = 0;
-
+    let sum = inp.len();
     sum as i64
 }
 

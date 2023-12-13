@@ -1,7 +1,3 @@
-#![feature(test)]
-
-extern crate test;
-
 fn part1(inp: &str) {
     let lines = inp.lines();
     let mut seeds = Vec::new();
@@ -139,24 +135,11 @@ fn part2(inp: &str) {
     println!("part2: {}", low.0);
 }
 
+#[allow(dead_code)]
 fn main() {
     let fi = "tests/d5/input1.txt";
     let reader = std::fs::read_to_string(fi).expect("read input");
 
     part1(&reader);
     part2(&reader);
-}
-
-#[bench]
-fn bench_part1(b: &mut test::Bencher) {
-    let fi = "tests/d5/input1.txt";
-    let reader = std::fs::read_to_string(fi).expect("read input");
-    b.iter(|| {part1(&reader);});
-}
-
-#[bench]
-fn bench_part2(b: &mut test::Bencher) {
-    let fi = "tests/d5/input1.txt";
-    let reader = std::fs::read_to_string(fi).expect("read input");
-    b.iter(|| {part2(&reader);});
 }

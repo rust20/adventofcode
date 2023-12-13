@@ -1,11 +1,7 @@
-#![feature(test)]
-
 use std::{
     collections::{HashMap, HashSet},
     time::Instant,
 };
-
-extern crate test;
 
 fn part1(inp: &str) {
     let sp = inp.find("\n\n").unwrap();
@@ -209,6 +205,7 @@ fn part2_slow(inp: &str) {
     // println!("part 2: {}", prod);
 }
 
+#[allow(dead_code)]
 fn main() {
     #[rustfmt::skip]
     let inputs = vec![
@@ -238,12 +235,4 @@ fn main() {
         );
         println!()
     }
-}
-
-#[bench]
-fn pt2(b: &mut test::Bencher) {
-    let fi = "tests/d8/input2.txt";
-    let reader = std::fs::read_to_string(fi).expect("read input");
-
-    b.iter(|| part2(&reader))
 }

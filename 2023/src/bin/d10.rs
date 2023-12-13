@@ -224,6 +224,7 @@ pub fn part2(inp: &str) {
     println!("part 2: {}", sum);
 }
 
+#[allow(dead_code)]
 fn main() {
     #[rustfmt::skip]
     let inputs = vec![

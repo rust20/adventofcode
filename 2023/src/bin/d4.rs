@@ -78,6 +78,7 @@ pub fn part2(inp: &str) {
     println!("part2: {}", sum)
 }
 
+#[allow(dead_code)]
 fn main() {
     let file_input = "tests/d4/input1.txt";
     let reader = std::fs::read_to_string(file_input).expect("read input");

@@ -1,6 +1,3 @@
-#![feature(test)]
-
-extern crate test;
 use std::iter::zip;
 
 fn part1(inp: &str) {
@@ -105,6 +102,7 @@ fn p2_v2(inp: &str) {
     println!("part 2 v2: {}", count);
 }
 
+#[allow(dead_code)]
 fn main() {
     let fi = "tests/d6/input1.txt";
     let reader = std::fs::read_to_string(fi).expect("read input");
@@ -112,52 +110,4 @@ fn main() {
     part2(&reader);
     p1_v2(&reader);
     p2_v2(&reader);
-}
-
-#[bench]
-fn v1(b: &mut test::Bencher) {
-    let fi = "tests/d6/input2.txt";
-    let reader = std::fs::read_to_string(fi).expect("read input");
-    b.iter(|| {
-        part1(&reader);
-        part2(&reader);
-    });
-    b.iter(|| {
-        part1(&reader);
-        part2(&reader);
-    });
-    b.iter(|| {
-        part1(&reader);
-        part2(&reader);
-    });
-    b.iter(|| {
-        part1(&reader);
-        part2(&reader);
-    })
-}
-
-#[bench]
-fn v2(b: &mut test::Bencher) {
-    let fi = "tests/d6/input2.txt";
-    let reader = std::fs::read_to_string(fi).expect("read input");
-    b.iter(|| {
-        p1_v2(&reader);
-        p2_v2(&reader);
-    });
-    b.iter(|| {
-        p1_v2(&reader);
-        p2_v2(&reader);
-    });
-    b.iter(|| {
-        p1_v2(&reader);
-        p2_v2(&reader);
-    });
-    b.iter(|| {
-        p1_v2(&reader);
-        p2_v2(&reader);
-    });
-    b.iter(|| {
-        p1_v2(&reader);
-        p2_v2(&reader);
-    });
 }
