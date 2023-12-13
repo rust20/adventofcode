@@ -2,3 +2,4 @@
 callgrind.*
 cachegrind.*
 perf.*
+input*.txt
