@@ -1,10 +1,6 @@
-#![feature(test)]
-
 use std::time::Instant;
 
-extern crate test;
-
-fn part1(inp: &str) {
+pub fn part1(inp: &str) {
     let mut map: Vec<Vec<char>> = inp.lines().map(|v| v.chars().collect()).collect();
     let map_h = map.len();
     let map_w = map[0].len();
@@ -114,7 +110,7 @@ fn part1(inp: &str) {
     println!("part 1: {}", sum);
 }
 
-fn part2(inp: &str) {
+pub fn part2(inp: &str) {
     let mut map: Vec<Vec<char>> = inp.lines().map(|v| v.chars().collect()).collect();
     let map_h = map.len();
     let map_w = map[0].len();
@@ -252,12 +248,4 @@ fn main() {
 
         println!("time1 {:?}, time2 {:?}", start2 - start1, finish);
     }
-}
-
-#[bench]
-fn pt2(b: &mut test::Bencher) {
-    let fi = "tests/d10/input2.txt";
-    let reader = std::fs::read_to_string(fi).expect("read input");
-
-    b.iter(|| part2(&reader))
 }

@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-fn part1(inp: &str) {
+pub fn part1(inp: &str) {
     let mut sum = 0;
 
     for line in inp.lines() {
@@ -34,7 +34,7 @@ fn part1(inp: &str) {
 
     println!("part1: {}", sum)
 }
-fn part2(inp: &str) {
+pub fn part2(inp: &str) {
 
     let lines = inp.lines().collect::<Vec<&str>>();
     let mut wins = Vec::new();
