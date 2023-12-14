@@ -1,21 +1,21 @@
 use std::time::Instant;
 
-pub fn part1(inp: Vec<u8>) -> i64 {
-    let parts = inp.iter().position(|v|"\n\n");
+pub fn part1(inp: &str) -> i64 {
+    let parts = inp.split("\n\n");
     let mut sum = 0;
     for part in parts {
-        let col_len = part.trim().chars().position(|v| v == '\n').unwrap();
-        let row_len = part.trim().len() / (col_len + 1);
-        let row_len = row_len + 1;
+        let part = part.trim();
+        let col_len = unsafe { part.chars().position(|v| v == '\n').unwrap_unchecked() };
+        let row_len = part.len() / (col_len + 1) + 1;
         let mut cols = vec![0; col_len];
         let mut rows = vec![0; row_len];
 
         for (i, val) in part.char_indices() {
             if val == '#' {
-                let x = i%(col_len+1);
-                let y = i/(col_len+1);
-                cols[x] += 2_i64.pow(y as u32);
-                rows[y] += 2_i64.pow(x as u32);
+                let x = i % (col_len + 1);
+                let y = i / (col_len + 1);
+                cols[x] += 1 << y;
+                rows[y] += 1 << x;
             }
         }
 
@@ -56,6 +56,7 @@ pub fn part1(inp: Vec<u8>) -> i64 {
     sum as i64
 }
 
+#[inline]
 fn calc_split(inp: &Vec<i64>) -> i64 {
     let col_len = inp.len();
     let cols = inp;
@@ -65,19 +66,18 @@ fn calc_split(inp: &Vec<i64>) -> i64 {
         let mut is_mirror = true;
         for j in 0..(i.min(col_len - i)) {
             let (l, r) = (cols[i - j - 1], cols[i + j]);
-            if l != r {
-                if (l ^ r).count_ones() == 1 {
-                    if has_smudge {
-                        is_mirror = false;
-                        break;
-                    } else {
-                        has_smudge = true;
-                    }
-                } else {
-                    is_mirror = false;
-                    break;
-                }
+            if l == r {
+                continue;
             }
+            if (l ^ r).count_ones() != 1 {
+                is_mirror = false;
+                break;
+            }
+            if has_smudge {
+                is_mirror = false;
+                break;
+            }
+            has_smudge = true;
         }
         if is_mirror && has_smudge {
             split = i as i64;
@@ -88,21 +88,20 @@ fn calc_split(inp: &Vec<i64>) -> i64 {
 }
 
 pub fn part2(inp: &str) -> i64 {
-    let parts = inp.split("\n\n");
+    let parts = inp.trim().split("\n\n");
     let mut sum = 0;
     for part in parts {
-        let col_len = part.trim().chars().position(|v| v == '\n').unwrap();
-        let row_len = part.trim().len() / (col_len + 1);
-        let row_len = row_len + 1;
+        let col_len = part.chars().position(|v| v == '\n').unwrap();
+        let row_len = part.len() / (col_len + 1) + 1;
         let mut cols = vec![0; col_len];
         let mut rows = vec![0; row_len];
 
         for (i, val) in part.char_indices() {
             if val == '#' {
-                let x = i%(col_len+1);
-                let y = i/(col_len+1);
-                cols[x] += 2_i64.pow(y as u32);
-                rows[y] += 2_i64.pow(x as u32);
+                let x = i % (col_len + 1);
+                let y = i / (col_len + 1);
+                cols[x] += 1 << y;
+                rows[y] += 1 << x;
             }
         }
 
