@@ -1,12 +1,60 @@
-use std::{collections::HashMap, time::Instant};
+use std::time::Instant;
 
 pub fn part1(inp: &str) -> i64 {
-    let sum = inp.len();
+    let sequence = inp.trim().split(",").collect::<Vec<&str>>();
+    let mut sum = 0;
+    for seq in sequence {
+        let mut curr: i32 = 0;
+        for i in seq.bytes() {
+            let i = i as i32;
+            curr = ((curr + i) * 17) & 0b11111111;
+        }
+        sum += curr;
+    }
     sum as i64
 }
 
 pub fn part2(inp: &str) -> i64 {
-    let sum = inp.len();
+    let mut boxes: Vec<Vec<(&str, &str)>> = vec![Vec::new(); 256];
+
+    let sequence = inp.trim().split(",").collect::<Vec<&str>>();
+
+    for seq in sequence {
+
+        let pos: Vec<&str> = seq.split(&['-', '='][..]).collect();
+        let label = pos[0];
+
+        let mut hash: usize = 0;
+        for i in label.bytes() {
+            let i = i as usize;
+            hash = ((hash + i) * 17) & 0b11111111;
+        }
+
+
+        if seq.contains(&"=") {
+            if let Some(loc) = boxes[hash].iter().position(|(k, _)| k == &label) {
+                boxes[hash][loc] = (label, pos[1])
+            } else {
+                boxes[hash].push((label, pos[1]))
+            }
+        } else {
+            if let Some(loc) = boxes[hash].iter().position(|(k, _)| k == &label) {
+                boxes[hash].remove(loc);
+            }
+        }
+    }
+
+    let sum: usize = boxes
+        .iter()
+        .enumerate()
+        .map(|(i, val)| {
+            val.iter()
+                .enumerate()
+                .map(|(j, v)| (i + 1) * (j + 1) * v.1.parse::<usize>().unwrap())
+                .sum::<usize>()
+        })
+        .sum();
+
     sum as i64
 }
 
@@ -14,7 +62,7 @@ pub fn part2(inp: &str) -> i64 {
 fn main() {
     #[rustfmt::skip]
     let inputs = vec![
-        // "input1.txt",
+        "input1.txt",
         "input2.txt",
     ];
 
