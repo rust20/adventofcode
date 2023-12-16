@@ -42,7 +42,7 @@ pub fn part2(inp: &str) -> i64 {
     let mut hs_val: HashMap<i64, _> = HashMap::new();
 
 
-    // TODO: use vec of positions of O as the hashmap indicator(?)
+    // TODO: use vec of positions of O as the hashmap key(?)
 
     let mut x = 0;
     for i in 0..cycles {

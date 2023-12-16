@@ -1,11 +1,6 @@
-use std::time::Instant;
+use std::{collections::HashMap, time::Instant};
 
-// const UP: isize = 0b0010; // up
-// const RI: isize = 0b0001; // right
-// const DO: isize = 0b0100; // down
-// const LE: isize = 0b1001; // left
-
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq, PartialEq, Hash)]
 enum Dir {
     UP = 0b0010,
     RI = 0b0001,
@@ -15,42 +10,40 @@ enum Dir {
 
 pub fn part1(inp: &str) -> i64 {
     let inp = inp.bytes().collect::<Vec<_>>();
-    let width = inp.iter().position(|&v| v == b'\n').unwrap() as isize + 1;
-    let height = inp.iter().filter(|&&v| v == b'\n').count() as isize;
+    let width = inp.iter().position(|&v| v == b'\n').unwrap();
 
     let mut stack = Vec::new();
-    let mut visited = vec![0 as isize; inp.len()];
+    let mut visited = vec![0; inp.len()];
 
-    stack.push((0 as isize, Dir::RI));
+    stack.push((0, Dir::RI));
 
     while !stack.is_empty() {
-        let (curr, dir) = stack.pop().unwrap();
-        if curr < 0
-            || curr % width == width - 1
-            || curr / width == height
-            || curr >= inp.len() as isize
-            || visited[curr as usize] & dir as isize > 0
+        let (curr, dir): (usize, _) = stack.pop().unwrap();
+        if curr.leading_zeros() == 0
+            || curr % (width + 1) == width - 1
+            || curr >= inp.len()
+            || visited[curr] & dir as usize > 0
         {
             continue;
         }
-        visited[curr as usize] |= dir as isize;
+        visited[curr] |= dir as usize;
 
-        match (inp[curr as usize], dir) {
+        match (inp[curr], dir) {
             (b'-', Dir::RI) | (b'.', Dir::RI) | (b'/', Dir::UP) | (b'\\', Dir::DO) => {
                 stack.push((curr + 1, Dir::RI));
             }
             (b'|', Dir::DO) | (b'.', Dir::DO) | (b'/', Dir::LE) | (b'\\', Dir::RI) => {
-                stack.push((curr + width, Dir::DO));
+                stack.push((curr + (width + 1), Dir::DO));
             }
             (b'-', Dir::LE) | (b'.', Dir::LE) | (b'/', Dir::DO) | (b'\\', Dir::UP) => {
                 stack.push((curr - 1, Dir::LE));
             }
             (b'|', Dir::UP) | (b'.', Dir::UP) | (b'/', Dir::RI) | (b'\\', Dir::LE) => {
-                stack.push((curr - width, Dir::UP));
+                stack.push((curr - (width + 1), Dir::UP));
             }
             (b'|', Dir::LE | Dir::RI) => {
-                stack.push((curr - width, Dir::UP));
-                stack.push((curr + width, Dir::DO));
+                stack.push((curr - (width + 1), Dir::UP));
+                stack.push((curr + (width + 1), Dir::DO));
             }
             (b'-', Dir::UP | Dir::DO) => {
                 stack.push((curr - 1, Dir::LE));
@@ -66,45 +59,47 @@ pub fn part1(inp: &str) -> i64 {
 
 pub fn part2(inp: &str) -> i64 {
     let inp = inp.bytes().collect::<Vec<_>>();
-    let wid = inp.iter().position(|&v| v == b'\n').unwrap() as isize + 1;
-    let hei = inp.iter().filter(|&&v| v == b'\n').count() as isize;
+    let width = inp.iter().position(|&v| v == b'\n').unwrap();
+    let height = inp.iter().filter(|&&v| v == b'\n').count();
 
     let mut max = 0;
 
-    let v = |start: isize, dir: Dir| {
+    let v = |start: usize, dir: Dir| {
         let mut stack = Vec::new();
-        let mut visited = vec![0 as isize; inp.len()];
+        let mut visited = vec![0; inp.len()];
 
         stack.push((start, dir));
 
+        let mut sum = 0;
         while !stack.is_empty() {
             let (curr, dir) = stack.pop().unwrap();
-            if curr < 0
-                || curr % wid == wid - 1
-                || curr / wid == hei
-                || curr >= inp.len() as isize
-                || visited[curr as usize] & dir as isize > 0
+
+            if curr.leading_zeros() == 0
+                || curr % (width + 1) == width
+                || curr >= inp.len()
+                || visited[curr] & dir as usize > 0
             {
                 continue;
             }
-            visited[curr as usize] |= dir as isize;
+            sum += 1;
+            visited[curr] |= dir as usize;
 
-            match (inp[curr as usize], dir) {
+            match (inp[curr], dir) {
                 (b'-', Dir::RI) | (b'.', Dir::RI) | (b'/', Dir::UP) | (b'\\', Dir::DO) => {
                     stack.push((curr + 1, Dir::RI))
                 }
                 (b'|', Dir::DO) | (b'.', Dir::DO) | (b'/', Dir::LE) | (b'\\', Dir::RI) => {
-                    stack.push((curr + wid, Dir::DO))
+                    stack.push((curr + (width + 1), Dir::DO))
                 }
                 (b'-', Dir::LE) | (b'.', Dir::LE) | (b'/', Dir::DO) | (b'\\', Dir::UP) => {
                     stack.push((curr - 1, Dir::LE))
                 }
                 (b'|', Dir::UP) | (b'.', Dir::UP) | (b'/', Dir::RI) | (b'\\', Dir::LE) => {
-                    stack.push((curr - wid, Dir::UP))
+                    stack.push((curr - (width + 1), Dir::UP))
                 }
                 (b'|', Dir::LE | Dir::RI) => {
-                    stack.push((curr - wid, Dir::UP));
-                    stack.push((curr + wid, Dir::DO));
+                    stack.push((curr - (width + 1), Dir::UP));
+                    stack.push((curr + (width + 1), Dir::DO));
                 }
                 (b'-', Dir::UP | Dir::DO) => {
                     stack.push((curr - 1, Dir::LE));
@@ -114,17 +109,119 @@ pub fn part2(inp: &str) -> i64 {
             }
         }
 
-        let sum = visited.iter().filter(|&&v| v > 0).count();
+        // let sum = visited.iter().filter(|&&v| v > 0).count();
         sum as i64
     };
-    for i in 0..wid - 1 {
-        let padding = wid * (hei - 1);
+
+    for i in 0..width {
+        let padding = (width + 1) * (height - 1);
         max = max.max(v(i, Dir::DO));
         max = max.max(v(padding + i, Dir::UP));
     }
-    for i in 0..hei {
-        max = max.max(v(i * wid, Dir::RI));
-        max = max.max(v((i + 1) * wid - 1, Dir::LE));
+    for i in 0..height {
+        max = max.max(v(i * (width + 1), Dir::RI));
+        max = max.max(v((i + 1) * (width + 1) - 1, Dir::LE));
+    }
+
+    max as i64
+}
+
+fn traverse(
+    memo: &mut HashMap<(usize, Dir), i64>,
+    map: &mut (&mut Vec<u8>, &Vec<u8>, usize),
+    next: (usize, Dir),
+) -> i64 {
+    if let Some(&val) = memo.get(&next) {
+        return val;
+    }
+
+    let (visited, inp, width) = map;
+    let width = *width;
+    let (curr, dir) = next;
+    if curr.leading_zeros() == 0
+        || curr % (width + 1) == width
+        || curr >= inp.len()
+        || visited[curr] & dir as u8 > 0
+    {
+        return 0;
+    }
+    visited[curr] |= dir as u8;
+
+    let res = 1 + match (inp[curr], dir) {
+        (b'-', Dir::RI) | (b'.', Dir::RI) | (b'/', Dir::UP) | (b'\\', Dir::DO) => {
+            traverse(memo, map, (curr + 1, Dir::RI))
+        }
+        (b'|', Dir::DO) | (b'.', Dir::DO) | (b'/', Dir::LE) | (b'\\', Dir::RI) => {
+            traverse(memo, map, (curr + (width + 1), Dir::DO))
+        }
+        (b'-', Dir::LE) | (b'.', Dir::LE) | (b'/', Dir::DO) | (b'\\', Dir::UP) => {
+            traverse(memo, map, (curr - 1, Dir::LE))
+        }
+        (b'|', Dir::UP) | (b'.', Dir::UP) | (b'/', Dir::RI) | (b'\\', Dir::LE) => {
+            traverse(memo, map, (curr - (width + 1), Dir::UP))
+        }
+        (b'|', Dir::LE | Dir::RI) => {
+            traverse(memo, map, (curr - (width + 1), Dir::UP))
+                + traverse(memo, map, (curr + (width + 1), Dir::DO))
+        }
+        (b'-', Dir::UP | Dir::DO) => {
+            traverse(memo, map, (curr - 1, Dir::LE)) + traverse(memo, map, (curr + 1, Dir::RI))
+        }
+        _ => unreachable!(),
+    };
+
+    memo.insert(next, res);
+
+    res
+}
+
+fn part1_2(inp: &str) -> i64 {
+    let inp = inp.bytes().collect::<Vec<_>>();
+    let width = inp.iter().position(|&v| v == b'\n').unwrap();
+
+    let mut memo = HashMap::new();
+    let sum = traverse(
+        &mut memo,
+        &mut (&mut vec![0; inp.len()], &inp, width),
+        (0, Dir::RI),
+    );
+
+    sum as i64
+}
+
+fn part2_2(inp: &str) -> i64 {
+    let inp = inp.bytes().collect::<Vec<_>>();
+    let width = inp.iter().position(|&v| v == b'\n').unwrap();
+    let height = inp.iter().filter(|&&v| v == b'\n').count();
+
+    let mut max = 0;
+
+    let mut memo = HashMap::new();
+
+    for i in 0..width {
+        let padding = (width + 1) * (height - 1);
+        max = max.max(traverse(
+            &mut memo,
+            &mut (&mut vec![0; inp.len()], &inp, width),
+            (i, Dir::DO),
+        ));
+        max = max.max(traverse(
+            &mut memo,
+            &mut (&mut vec![0; inp.len()], &inp, width),
+            (padding + i, Dir::UP),
+        ));
+    }
+    for i in 0..height {
+        max = max.max(traverse(
+            &mut memo,
+            &mut (&mut vec![0; inp.len()], &inp, width),
+            (i * (width + 1), Dir::RI),
+        ));
+        max = max.max(traverse(
+            &mut memo,
+            &mut (&mut vec![0; inp.len()], &inp, width),
+            ((i + 1) * (width + 1) - 1, Dir::LE),
+        ));
     }
 
     max as i64
@@ -148,6 +245,13 @@ fn main() {
         println!("part2 {}", part2(&reader));
         let finish = start2.elapsed();
 
+        let start1_2 = Instant::now();
+        println!("part1 {}", part1_2(&reader));
+        let start2_2 = Instant::now();
+        println!("part2 {}", part2_2(&reader));
+        let finish_2 = start2_2.elapsed();
+
         println!("time1 {:?}, time2 {:?}", start2 - start1, finish);
+        println!("v2: time1 {:?}, time2 {:?}", start2_2 - start1_2, finish_2);
     }
 }
