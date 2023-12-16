@@ -1,9 +1,17 @@
 use std::time::Instant;
 
-const UP: isize = 0b0010; // up
-const RI: isize = 0b0001; // right
-const DO: isize = 0b0100; // down
-const LE: isize = 0b1000; // left
+// const UP: isize = 0b0010; // up
+// const RI: isize = 0b0001; // right
+// const DO: isize = 0b0100; // down
+// const LE: isize = 0b1001; // left
+
+#[derive(Clone, Copy)]
+enum Dir {
+    UP = 0b0010,
+    RI = 0b0001,
+    DO = 0b0100,
+    LE = 0b1000,
+}
 
 pub fn part1(inp: &str) -> i64 {
     let inp = inp.bytes().collect::<Vec<_>>();
@@ -13,7 +21,7 @@ pub fn part1(inp: &str) -> i64 {
     let mut stack = Vec::new();
     let mut visited = vec![0 as isize; inp.len()];
 
-    stack.push((0 as isize, RI));
+    stack.push((0 as isize, Dir::RI));
 
     while !stack.is_empty() {
         let (curr, dir) = stack.pop().unwrap();
@@ -21,32 +29,32 @@ pub fn part1(inp: &str) -> i64 {
             || curr % width == width - 1
             || curr / width == height
             || curr >= inp.len() as isize
-            || visited[curr as usize] & dir > 0
+            || visited[curr as usize] & dir as isize > 0
         {
             continue;
         }
-        visited[curr as usize] |= dir;
+        visited[curr as usize] |= dir as isize;
 
         match (inp[curr as usize], dir) {
-            (b'-', RI) | (b'.', RI) | (b'/', UP) | (b'\\', DO) => {
-                stack.push((curr + 1, RI));
+            (b'-', Dir::RI) | (b'.', Dir::RI) | (b'/', Dir::UP) | (b'\\', Dir::DO) => {
+                stack.push((curr + 1, Dir::RI));
             }
-            (b'|', DO) | (b'.', DO) | (b'/', LE) | (b'\\', RI) => {
-                stack.push((curr + width, DO));
+            (b'|', Dir::DO) | (b'.', Dir::DO) | (b'/', Dir::LE) | (b'\\', Dir::RI) => {
+                stack.push((curr + width, Dir::DO));
             }
-            (b'-', LE) | (b'.', LE) | (b'/', DO) | (b'\\', UP) => {
-                stack.push((curr - 1, LE));
+            (b'-', Dir::LE) | (b'.', Dir::LE) | (b'/', Dir::DO) | (b'\\', Dir::UP) => {
+                stack.push((curr - 1, Dir::LE));
             }
-            (b'|', UP) | (b'.', UP) | (b'/', RI) | (b'\\', LE) => {
-                stack.push((curr - width, UP));
+            (b'|', Dir::UP) | (b'.', Dir::UP) | (b'/', Dir::RI) | (b'\\', Dir::LE) => {
+                stack.push((curr - width, Dir::UP));
             }
-            (b'|', LE | RI) => {
-                stack.push((curr - width, UP));
-                stack.push((curr + width, DO));
+            (b'|', Dir::LE | Dir::RI) => {
+                stack.push((curr - width, Dir::UP));
+                stack.push((curr + width, Dir::DO));
             }
-            (b'-', UP | DO) => {
-                stack.push((curr - 1, LE));
-                stack.push((curr + 1, RI));
+            (b'-', Dir::UP | Dir::DO) => {
+                stack.push((curr - 1, Dir::LE));
+                stack.push((curr + 1, Dir::RI));
             }
             _ => {}
         }
@@ -63,7 +71,7 @@ pub fn part2(inp: &str) -> i64 {
 
     let mut max = 0;
 
-    let v = |start: isize, dir: isize| {
+    let v = |start: isize, dir: Dir| {
         let mut stack = Vec::new();
         let mut visited = vec![0 as isize; inp.len()];
 
@@ -75,24 +83,32 @@ pub fn part2(inp: &str) -> i64 {
                 || curr % wid == wid - 1
                 || curr / wid == hei
                 || curr >= inp.len() as isize
-                || visited[curr as usize] & dir > 0
+                || visited[curr as usize] & dir as isize > 0
             {
                 continue;
             }
-            visited[curr as usize] |= dir;
+            visited[curr as usize] |= dir as isize;
 
             match (inp[curr as usize], dir) {
-                (b'-', RI) | (b'.', RI) | (b'/', UP) | (b'\\', DO) => stack.push((curr + 1, RI)),
-                (b'|', DO) | (b'.', DO) | (b'/', LE) | (b'\\', RI) => stack.push((curr + wid, DO)),
-                (b'-', LE) | (b'.', LE) | (b'/', DO) | (b'\\', UP) => stack.push((curr - 1, LE)),
-                (b'|', UP) | (b'.', UP) | (b'/', RI) | (b'\\', LE) => stack.push((curr - wid, UP)),
-                (b'|', LE | RI) => {
-                    stack.push((curr - wid, UP));
-                    stack.push((curr + wid, DO));
+                (b'-', Dir::RI) | (b'.', Dir::RI) | (b'/', Dir::UP) | (b'\\', Dir::DO) => {
+                    stack.push((curr + 1, Dir::RI))
                 }
-                (b'-', UP | DO) => {
-                    stack.push((curr - 1, LE));
-                    stack.push((curr + 1, RI));
+                (b'|', Dir::DO) | (b'.', Dir::DO) | (b'/', Dir::LE) | (b'\\', Dir::RI) => {
+                    stack.push((curr + wid, Dir::DO))
+                }
+                (b'-', Dir::LE) | (b'.', Dir::LE) | (b'/', Dir::DO) | (b'\\', Dir::UP) => {
+                    stack.push((curr - 1, Dir::LE))
+                }
+                (b'|', Dir::UP) | (b'.', Dir::UP) | (b'/', Dir::RI) | (b'\\', Dir::LE) => {
+                    stack.push((curr - wid, Dir::UP))
+                }
+                (b'|', Dir::LE | Dir::RI) => {
+                    stack.push((curr - wid, Dir::UP));
+                    stack.push((curr + wid, Dir::DO));
+                }
+                (b'-', Dir::UP | Dir::DO) => {
+                    stack.push((curr - 1, Dir::LE));
+                    stack.push((curr + 1, Dir::RI));
                 }
                 _ => {}
             }
@@ -103,12 +119,12 @@ pub fn part2(inp: &str) -> i64 {
     };
     for i in 0..wid - 1 {
         let padding = wid * (hei - 1);
-        max = max.max(v(i, DO));
-        max = max.max(v(padding + i, UP));
+        max = max.max(v(i, Dir::DO));
+        max = max.max(v(padding + i, Dir::UP));
     }
     for i in 0..hei {
-        max = max.max(v(i * wid, RI));
-        max = max.max(v((i + 1) * wid - 1, LE));
+        max = max.max(v(i * wid, Dir::RI));
+        max = max.max(v((i + 1) * wid - 1, Dir::LE));
     }
 
     max as i64
