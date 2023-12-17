@@ -17,15 +17,17 @@ pub fn part1(inp: &str) -> i64 {
 
     stack.push((0, Dir::RI));
 
+    let mut sum = 0;
     while !stack.is_empty() {
         let (curr, dir): (usize, _) = stack.pop().unwrap();
         if curr.leading_zeros() == 0
-            || curr % (width + 1) == width - 1
             || curr >= inp.len()
+            || curr % (width + 1) == width
             || visited[curr] & dir as usize > 0
         {
             continue;
         }
+        sum += (visited[curr] == 0) as i32;
         visited[curr] |= dir as usize;
 
         match (inp[curr], dir) {
@@ -53,7 +55,7 @@ pub fn part1(inp: &str) -> i64 {
         }
     }
 
-    let sum = visited.iter().filter(|&&v| v > 0).count();
+    // let sum = visited.iter().filter(|&&v| v > 0).count();
     sum as i64
 }
 
@@ -81,7 +83,8 @@ pub fn part2(inp: &str) -> i64 {
             {
                 continue;
             }
-            sum += 1;
+
+            sum += (visited[curr] == 0) as i32;
             visited[curr] |= dir as usize;
 
             match (inp[curr], dir) {
@@ -113,8 +116,8 @@ pub fn part2(inp: &str) -> i64 {
         sum as i64
     };
 
+    let padding = (width + 1) * (height - 1);
     for i in 0..width {
-        let padding = (width + 1) * (height - 1);
         max = max.max(v(i, Dir::DO));
         max = max.max(v(padding + i, Dir::UP));
     }
@@ -127,50 +130,54 @@ pub fn part2(inp: &str) -> i64 {
 }
 
 fn traverse(
-    memo: &mut HashMap<(usize, Dir), i64>,
+    memo: &mut Vec<i32>,
     map: &mut (&mut Vec<u8>, &Vec<u8>, usize),
     next: (usize, Dir),
 ) -> i64 {
-    if let Some(&val) = memo.get(&next) {
-        return val;
-    }
-
+    let (curr, dir) = next;
     let (visited, inp, width) = map;
     let width = *width;
-    let (curr, dir) = next;
+
     if curr.leading_zeros() == 0
-        || curr % (width + 1) == width
         || curr >= inp.len()
+        || curr % (width + 1) == width
         || visited[curr] & dir as u8 > 0
     {
         return 0;
     }
+    // let tz = curr + (dir as u8).trailing_zeros() as usize;
+    // let memo_val = memo[tz];
+    // if memo_val > 0 {
+    //     return memo_val as i64;
+    // }
+    let energieze = (visited[curr] == 0) as i64;
     visited[curr] |= dir as u8;
 
-    let res = 1 + match (inp[curr], dir) {
-        (b'-', Dir::RI) | (b'.', Dir::RI) | (b'/', Dir::UP) | (b'\\', Dir::DO) => {
-            traverse(memo, map, (curr + 1, Dir::RI))
-        }
-        (b'|', Dir::DO) | (b'.', Dir::DO) | (b'/', Dir::LE) | (b'\\', Dir::RI) => {
-            traverse(memo, map, (curr + (width + 1), Dir::DO))
-        }
-        (b'-', Dir::LE) | (b'.', Dir::LE) | (b'/', Dir::DO) | (b'\\', Dir::UP) => {
-            traverse(memo, map, (curr - 1, Dir::LE))
-        }
-        (b'|', Dir::UP) | (b'.', Dir::UP) | (b'/', Dir::RI) | (b'\\', Dir::LE) => {
-            traverse(memo, map, (curr - (width + 1), Dir::UP))
-        }
-        (b'|', Dir::LE | Dir::RI) => {
-            traverse(memo, map, (curr - (width + 1), Dir::UP))
-                + traverse(memo, map, (curr + (width + 1), Dir::DO))
-        }
-        (b'-', Dir::UP | Dir::DO) => {
-            traverse(memo, map, (curr - 1, Dir::LE)) + traverse(memo, map, (curr + 1, Dir::RI))
-        }
-        _ => unreachable!(),
-    };
+    let res = energieze
+        + match (inp[curr], dir) {
+            (b'-', Dir::RI) | (b'.', Dir::RI) | (b'/', Dir::UP) | (b'\\', Dir::DO) => {
+                traverse(memo, map, (curr + 1, Dir::RI))
+            }
+            (b'|', Dir::DO) | (b'.', Dir::DO) | (b'/', Dir::LE) | (b'\\', Dir::RI) => {
+                traverse(memo, map, (curr + (width + 1), Dir::DO))
+            }
+            (b'-', Dir::LE) | (b'.', Dir::LE) | (b'/', Dir::DO) | (b'\\', Dir::UP) => {
+                traverse(memo, map, (curr - 1, Dir::LE))
+            }
+            (b'|', Dir::UP) | (b'.', Dir::UP) | (b'/', Dir::RI) | (b'\\', Dir::LE) => {
+                traverse(memo, map, (curr - (width + 1), Dir::UP))
+            }
+            (b'|', Dir::LE | Dir::RI) => {
+                traverse(memo, map, (curr - (width + 1), Dir::UP))
+                    + traverse(memo, map, (curr + (width + 1), Dir::DO))
+            }
+            (b'-', Dir::UP | Dir::DO) => {
+                traverse(memo, map, (curr - 1, Dir::LE)) + traverse(memo, map, (curr + 1, Dir::RI))
+            }
+            _ => unreachable!(),
+        };
 
-    memo.insert(next, res);
+    // memo[tz] = res as i32;
 
     res
 }
@@ -179,7 +186,7 @@ fn part1_2(inp: &str) -> i64 {
     let inp = inp.bytes().collect::<Vec<_>>();
     let width = inp.iter().position(|&v| v == b'\n').unwrap();
 
-    let mut memo = HashMap::new();
+    let mut memo = vec![0; inp.len()];
     let sum = traverse(
         &mut memo,
         &mut (&mut vec![0; inp.len()], &inp, width),
@@ -196,15 +203,16 @@ fn part2_2(inp: &str) -> i64 {
 
     let mut max = 0;
 
-    let mut memo = HashMap::new();
-
+    let padding = (width + 1) * (height - 1);
     for i in 0..width {
-        let padding = (width + 1) * (height - 1);
+        let mut memo = vec![0; inp.len()];
         max = max.max(traverse(
             &mut memo,
             &mut (&mut vec![0; inp.len()], &inp, width),
             (i, Dir::DO),
         ));
+
+        let mut memo = vec![0; inp.len()];
         max = max.max(traverse(
             &mut memo,
             &mut (&mut vec![0; inp.len()], &inp, width),
@@ -212,11 +220,14 @@ fn part2_2(inp: &str) -> i64 {
         ));
     }
     for i in 0..height {
+        let mut memo = vec![0; inp.len()];
         max = max.max(traverse(
             &mut memo,
             &mut (&mut vec![0; inp.len()], &inp, width),
             (i * (width + 1), Dir::RI),
         ));
+
+        let mut memo = vec![0; inp.len()];
         max = max.max(traverse(
             &mut memo,
             &mut (&mut vec![0; inp.len()], &inp, width),
