@@ -1,118 +1,113 @@
 use std::{
-    collections::{HashMap, VecDeque},
+    cmp::Reverse,
+    collections::BinaryHeap,
     time::{Duration, Instant},
 };
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Ord, PartialOrd)]
 enum Dir {
-    ZE = 0,
-    RI = 0b0001,
-    UP = 0b0010,
-    DO = 0b0100,
-    LE = 0b1000,
+    RI = 0,
+    UP = 1,
+    DO = 2,
+    LE = 3,
 }
 
 pub fn part1(inp: &str) -> i64 {
     let map: Vec<_> = inp.bytes().collect();
-    let sum = inp.len();
-    let width = inp.chars().position(|v| v == '\n').unwrap();
+    let w = inp.chars().position(|v| v == '\n').unwrap() + 1;
 
-    let mut visited = vec![(i32::MAX, Dir::ZE); inp.len()];
-    let mut stack = VecDeque::new();
-    stack.push_back((0, 0, 0, Dir::RI));
+    let mut visited = vec![i32::MAX; 16 * map.len()];
+    let mut stack = BinaryHeap::new();
+    stack.push(Reverse((0, 0, 0, Dir::RI)));
 
     while !stack.is_empty() {
-        let (curr, c_loss, dist, dir): (usize, _, _, _) = stack.pop_front().unwrap();
+        let (c_loss, curr, dist, dir): (_, usize, _, _) = stack.pop().unwrap().0;
 
         if curr.leading_zeros() == 0
             || curr >= inp.len()
-            || curr % (width + 1) == width
-            || visited[curr].0 < (map[curr] - b'0') as i32 + c_loss
+            || curr % w == w - 1
+            || dist == 3
+            || curr == map.len() - 1
         {
             continue;
         }
 
+        let loc = curr * 16 + dir as usize * 4 + dist;
         let loss = (map[curr] - b'0') as i32 + c_loss;
 
-        for i in 0..map.len() {
-            if curr == i {
-                print!("#");
-            } else if visited[i].1 != Dir::ZE {
-                print!("{}", match visited[i].1 {
-                    Dir::RI => ">",
-                    Dir::UP => "^",
-                    Dir::DO => "V",
-                    Dir::LE => "<",
-                    Dir::ZE => unreachable!(),
-                });
-            } else {
-                print!("{}", map[i] as char);
-            }
+
+        if visited[loc] <= (map[curr] - b'0') as i32 + c_loss {
+            continue;
         }
-        println!();
-        // std::thread::sleep(Duration::from_millis(1));
 
-        visited[curr] = (loss, dir.clone());
-        let n_dist = if dist == 2 { 0 } else { dist + 1 };
+        visited[loc] = loss;
 
-        // stack.push_back((curr + 1, loss, n_dist, Dir::RI));
-        // stack.push_back((curr - (width + 1), loss, n_dist, Dir::UP));
-        // stack.push_back((curr + (width + 1), loss, n_dist, Dir::DO));
-        // stack.push_back((curr - 1, loss, n_dist, Dir::LE));
-        match (dist == 2, dir) {
-            (true, Dir::RI) => {
-                // stack.push_back((curr + 1, loss, n_dist, Dir::RI));
-                stack.push_back((curr - (width + 1), loss, n_dist, Dir::UP));
-                stack.push_back((curr + (width + 1), loss, n_dist, Dir::DO));
-                // stack.push_back((curr - 1, loss, n_dist, Dir::LE));
+        match dir {
+            Dir::RI => {
+                stack.push(Reverse((loss, curr + 1, dist + 1, Dir::RI)));
+                stack.push(Reverse((loss, curr - w, 0, Dir::UP)));
+                stack.push(Reverse((loss, curr + w, 0, Dir::DO)));
             }
-            (false, Dir::RI) => {
-                stack.push_back((curr + 1, loss, n_dist, Dir::RI));
-                stack.push_back((curr - (width + 1), loss, n_dist, Dir::UP));
-                stack.push_back((curr + (width + 1), loss, n_dist, Dir::DO));
-                // stack.push_back((curr - 1, loss, n_dist, Dir::LE));
+            Dir::UP => {
+                stack.push(Reverse((loss, curr + 1, 0, Dir::RI)));
+                stack.push(Reverse((loss, curr - w, dist + 1, Dir::UP)));
+                stack.push(Reverse((loss, curr - 1, 0, Dir::LE)));
             }
-            (true, Dir::UP) => {
-                stack.push_back((curr + 1, loss, n_dist, Dir::RI));
-                // stack.push_back((curr - (width + 1), loss, n_dist, Dir::UP));
-                // stack.push_back((curr + (width + 1), loss, n_dist, Dir::DO));
-                stack.push_back((curr - 1, loss, n_dist, Dir::LE));
+            Dir::DO => {
+                stack.push(Reverse((loss, curr + 1, 0, Dir::RI)));
+                stack.push(Reverse((loss, curr + w, dist + 1, Dir::DO)));
+                stack.push(Reverse((loss, curr - 1, 0, Dir::LE)));
             }
-            (false, Dir::UP) => {
-                stack.push_back((curr + 1, loss, n_dist, Dir::RI));
-                stack.push_back((curr - (width + 1), loss, n_dist, Dir::UP));
-                // stack.push_back((curr + (width + 1), loss, n_dist, Dir::DO));
-                stack.push_back((curr - 1, loss, n_dist, Dir::LE));
-            }
-            (true, Dir::DO) => {
-                stack.push_back((curr + 1, loss, n_dist, Dir::RI));
-                // stack.push_back((curr - (width + 1), loss, n_dist, Dir::UP));
-                // stack.push_back((curr + (width + 1), loss, n_dist, Dir::DO));
-                stack.push_back((curr - 1, loss, n_dist, Dir::LE));
-            }
-            (false, Dir::DO) => {
-                stack.push_back((curr + 1, loss, n_dist, Dir::RI));
-                // stack.push_back((curr - (width + 1), loss, n_dist, Dir::UP));
-                stack.push_back((curr + (width + 1), loss, n_dist, Dir::DO));
-                stack.push_back((curr - 1, loss, n_dist, Dir::LE));
-            }
-            (true, Dir::LE) => {
-                // stack.push_back((curr + 1, loss, n_dist, Dir::RI));
-                stack.push_back((curr - (width + 1), loss, n_dist, Dir::UP));
-                stack.push_back((curr + (width + 1), loss, n_dist, Dir::DO));
-                stack.push_back((curr - 1, loss, n_dist, Dir::LE));
-            }
-            (false, Dir::LE) => {
-                // stack.push_back((curr + 1, loss, n_dist, Dir::RI));
-                stack.push_back((curr - (width + 1), loss, n_dist, Dir::UP));
-                stack.push_back((curr + (width + 1), loss, n_dist, Dir::DO));
-                // stack.push_back((curr - 1, loss, n_dist, Dir::LE));
+            Dir::LE => {
+                stack.push(Reverse((loss, curr - w, 0, Dir::UP)));
+                stack.push(Reverse((loss, curr + w, 0, Dir::DO)));
+                stack.push(Reverse((loss, curr - 1, dist + 1, Dir::LE)));
             }
             _ => unreachable!(),
         }
     }
-    println!("{:?}", inp.chars().collect::<Vec<char>>()[inp.len() - 2]);
-    visited[inp.len() - 2].0 as i64
+
+    // let allpath = visited[map.len() - 2].2.clone();
+
+    // for pt in 0..allpath.len() {
+    //     println!("res: {}", visited[map.len()-2].0[pt]);
+    //     let path_taken: HashMap<usize, Dir> = HashMap::from_iter(allpath[pt].clone());
+    //     for i in 0..map.len() {
+    //         print!(
+    //             "{}",
+    //             match path_taken.get(&i) {
+    //                 None => format!("{}", map[i] as char),
+    //                 Some(Dir::RI) => ">".to_string(),
+    //                 Some(Dir::UP) => "^".to_string(),
+    //                 Some(Dir::DO) => "V".to_string(),
+    //                 Some(Dir::LE) => "<".to_string(),
+    //                 _ => "!".to_string(),
+    //             }
+    //         );
+    //     }
+    //     println!();
+    // }
+
+    // let path_taken: HashMap<usize, Dir> = HashMap::from_iter(visited[map.len() - 2].2.clone());
+    // for i in 0..map.len() {
+    //     print!(
+    //         "{}",
+    //         match path_taken.get(&i) {
+    //             None => &String::from_utf8([map[i]].to_vec()).unwrap(),
+    //             Some(Dir::RI) => ">",
+    //             Some(Dir::UP) => "^",
+    //             Some(Dir::DO) => "V",
+    //             Some(Dir::LE) => "<",
+    //             _ => "!",
+    //         }
+    //     );
+    // }
+    // println!();
+    // std::thread::sleep(Duration::from_millis(1));
+
+    let last = map.len() - 2;
+    *visited[last * 16..(last + 1) * 16].iter().min().unwrap() as i64 - (map[0] - b'0') as i64
+    // min as i64 - (map[0] - b'0') as i64
 }
 
 pub fn part2(inp: &str) -> i64 {
@@ -124,7 +119,7 @@ pub fn part2(inp: &str) -> i64 {
 fn main() {
     #[rustfmt::skip]
     let inputs = vec![
-        // "input1.txt",
+        "input1.txt",
         "input2.txt",
     ];
 
