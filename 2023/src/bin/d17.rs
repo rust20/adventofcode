@@ -19,14 +19,14 @@ pub fn part1(inp: &str) -> i64 {
     let w = inp.chars().position(|v| v == '\n').unwrap() + 1;
 
     let target = inp.len() - 1;
-    let mut paths = vec![vec![]; DIRS * MAX_STRAIGHT * inp.len()];
+    // let mut paths = vec![vec![]; DIRS * MAX_STRAIGHT * inp.len()];
     let mut min_cost = vec![i32::MAX; DIRS * MAX_STRAIGHT * inp.len()];
     let mut queue = BinaryHeap::new();
-    queue.push(Reverse((0, 0, (0, Dir::RI), vec![])));
-    queue.push(Reverse((0, 0, (0, Dir::DO), vec![])));
+    queue.push(Reverse((0, 0, (0, Dir::RI))));
+    queue.push(Reverse((0, 0, (0, Dir::DO))));
 
     while !queue.is_empty() {
-        let (prev_loss, dist, (curr, dir), mut path): (_, _, (usize, _), _) =
+        let (prev_loss, dist, (curr, dir)): (_, _, (usize, _)) =
             queue.pop().unwrap().0;
 
         if curr.leading_zeros() == 0
@@ -46,29 +46,29 @@ pub fn part1(inp: &str) -> i64 {
         }
         min_cost[loc] = loss;
 
-        path.push((curr, dir));
-        paths[loc] = path.clone();
+        // path.push((curr, dir));
+        // paths[loc] = path.clone();
 
         match dir {
             Dir::RI => {
-                queue.push(Reverse((loss, dist + 1, (curr + 1, Dir::RI), path.clone())));
-                queue.push(Reverse((loss, 0, (curr - w, Dir::UP), path.clone())));
-                queue.push(Reverse((loss, 0, (curr + w, Dir::DO), path.clone())));
+                queue.push(Reverse((loss, dist + 1, (curr + 1, Dir::RI))));
+                queue.push(Reverse((loss, 0, (curr - w, Dir::UP))));
+                queue.push(Reverse((loss, 0, (curr + w, Dir::DO))));
             }
             Dir::UP => {
-                queue.push(Reverse((loss, 0, (curr + 1, Dir::RI), path.clone())));
-                queue.push(Reverse((loss, dist + 1, (curr - w, Dir::UP), path.clone())));
-                queue.push(Reverse((loss, 0, (curr - 1, Dir::LE), path.clone())));
+                queue.push(Reverse((loss, 0, (curr + 1, Dir::RI))));
+                queue.push(Reverse((loss, dist + 1, (curr - w, Dir::UP))));
+                queue.push(Reverse((loss, 0, (curr - 1, Dir::LE))));
             }
             Dir::DO => {
-                queue.push(Reverse((loss, 0, (curr + 1, Dir::RI), path.clone())));
-                queue.push(Reverse((loss, dist + 1, (curr + w, Dir::DO), path.clone())));
-                queue.push(Reverse((loss, 0, (curr - 1, Dir::LE), path.clone())));
+                queue.push(Reverse((loss, 0, (curr + 1, Dir::RI))));
+                queue.push(Reverse((loss, dist + 1, (curr + w, Dir::DO))));
+                queue.push(Reverse((loss, 0, (curr - 1, Dir::LE))));
             }
             Dir::LE => {
-                queue.push(Reverse((loss, 0, (curr - w, Dir::UP), path.clone())));
-                queue.push(Reverse((loss, 0, (curr + w, Dir::DO), path.clone())));
-                queue.push(Reverse((loss, dist + 1, (curr - 1, Dir::LE), path.clone())));
+                queue.push(Reverse((loss, 0, (curr - w, Dir::UP))));
+                queue.push(Reverse((loss, 0, (curr + w, Dir::DO))));
+                queue.push(Reverse((loss, dist + 1, (curr - 1, Dir::LE))));
             }
         }
     }
@@ -78,26 +78,26 @@ pub fn part1(inp: &str) -> i64 {
     let end = start + DIRS * MAX_STRAIGHT;
 
     let min = min_cost[start..end].iter().min().unwrap();
-    let pos = min_cost[start..end]
-        .iter()
-        .zip(paths[start..end].iter())
-        .position(|(v1, v2)| v1 == min && !v2.is_empty())
-        .unwrap();
-    let path_taken: HashMap<usize, Dir> = HashMap::from_iter(paths[start + pos].clone());
-
-    for i in 0..inp.len() {
-        print!(
-            "{}",
-            match path_taken.get(&i) {
-                None => format!("{}", inp.chars().nth(i).unwrap()),
-                Some(Dir::RI) => ">".to_string().red(),
-                Some(Dir::UP) => "^".to_string().red(),
-                Some(Dir::DO) => "V".to_string().red(),
-                Some(Dir::LE) => "<".to_string().red(),
-            }
-        );
-    }
-    println!();
+    // let pos = min_cost[start..end]
+    //     .iter()
+    //     .zip(paths[start..end].iter())
+    //     .position(|(v1, v2)| v1 == min && !v2.is_empty())
+    //     .unwrap();
+    // let path_taken: HashMap<usize, Dir> = HashMap::from_iter(paths[start + pos].clone());
+    //
+    // for i in 0..inp.len() {
+    //     print!(
+    //         "{}",
+    //         match path_taken.get(&i) {
+    //             None => format!("{}", inp.chars().nth(i).unwrap()),
+    //             Some(Dir::RI) => ">".to_string().red(),
+    //             Some(Dir::UP) => "^".to_string().red(),
+    //             Some(Dir::DO) => "V".to_string().red(),
+    //             Some(Dir::LE) => "<".to_string().red(),
+    //         }
+    //     );
+    // }
+    // println!();
 
     *min as i64 - (inp.bytes().nth(0).unwrap() - b'0') as i64
 }
@@ -112,18 +112,18 @@ pub fn part2(inp: &str) -> i64 {
 
     let target = inp.len() - 1;
     let mut visited = vec![i32::MAX; DIRS * MAX_STRAIGHT * map.len()];
-    let mut paths = vec![vec![]; DIRS * MAX_STRAIGHT * map.len()];
+    // let mut paths = vec![vec![]; DIRS * MAX_STRAIGHT * map.len()];
 
     let mut queue = BinaryHeap::new();
-    queue.push(Reverse((0, 0, (0, Dir::RI), vec![])));
-    queue.push(Reverse((0, 0, (0, Dir::DO), vec![])));
+    queue.push(Reverse((0, 0, (0, Dir::RI))));
+    queue.push(Reverse((0, 0, (0, Dir::DO))));
 
     let is_valid = |pos: usize| {
         !(pos.leading_zeros() == 0 || pos >= inp.len() || pos % w == w - 1 || pos == target)
     };
 
     while !queue.is_empty() {
-        let (c_loss, dist, (curr, dir), mut path): (_, _, (usize, _), _) = queue.pop().unwrap().0;
+        let (c_loss, dist, (curr, dir)): (_, _, (usize, _)) = queue.pop().unwrap().0;
 
         if curr.leading_zeros() == 0
             || curr >= inp.len()
@@ -142,46 +142,46 @@ pub fn part2(inp: &str) -> i64 {
 
         visited[loc] = loss;
 
-        path.push((curr, dir));
-        paths[loc] = path.clone();
+        // path.push((curr, dir));
+        // paths[loc] = path.clone();
 
         let dist_compare = MIN_DIST - 1;
 
         match dir {
             Dir::RI => {
-                queue.push(Reverse((loss, dist + 1, (curr + 1, Dir::RI), path.clone())));
+                queue.push(Reverse((loss, dist + 1, (curr + 1, Dir::RI))));
                 if dist >= dist_compare && is_valid(curr - w * MIN_DIST) {
-                    queue.push(Reverse((loss, 0, (curr - w, Dir::UP), path.clone())));
+                    queue.push(Reverse((loss, 0, (curr - w, Dir::UP))));
                 }
                 if dist >= dist_compare && is_valid(curr + w * MIN_DIST) {
-                    queue.push(Reverse((loss, 0, (curr + w, Dir::DO), path.clone())));
+                    queue.push(Reverse((loss, 0, (curr + w, Dir::DO))));
                 }
             }
             Dir::UP => {
-                queue.push(Reverse((loss, dist + 1, (curr - w, Dir::UP), path.clone())));
+                queue.push(Reverse((loss, dist + 1, (curr - w, Dir::UP))));
                 if dist >= dist_compare && is_valid(curr + 1 * MIN_DIST) {
-                    queue.push(Reverse((loss, 0, (curr + 1, Dir::RI), path.clone())));
+                    queue.push(Reverse((loss, 0, (curr + 1, Dir::RI))));
                 }
                 if dist >= dist_compare && is_valid(curr - 1 * MIN_DIST) {
-                    queue.push(Reverse((loss, 0, (curr - 1, Dir::LE), path.clone())));
+                    queue.push(Reverse((loss, 0, (curr - 1, Dir::LE))));
                 }
             }
             Dir::DO => {
-                queue.push(Reverse((loss, dist + 1, (curr + w, Dir::DO), path.clone())));
+                queue.push(Reverse((loss, dist + 1, (curr + w, Dir::DO))));
                 if dist >= dist_compare && is_valid(curr + 1 * MIN_DIST) {
-                    queue.push(Reverse((loss, 0, (curr + 1, Dir::RI), path.clone())));
+                    queue.push(Reverse((loss, 0, (curr + 1, Dir::RI))));
                 }
                 if dist >= dist_compare && is_valid(curr - 1 * MIN_DIST) {
-                    queue.push(Reverse((loss, 0, (curr - 1, Dir::LE), path.clone())));
+                    queue.push(Reverse((loss, 0, (curr - 1, Dir::LE))));
                 }
             }
             Dir::LE => {
-                queue.push(Reverse((loss, dist + 1, (curr - 1, Dir::LE), path.clone())));
+                queue.push(Reverse((loss, dist + 1, (curr - 1, Dir::LE))));
                 if dist >= dist_compare && is_valid(curr - w * MIN_DIST) {
-                    queue.push(Reverse((loss, 0, (curr - w, Dir::UP), path.clone())));
+                    queue.push(Reverse((loss, 0, (curr - w, Dir::UP))));
                 }
                 if dist >= dist_compare && is_valid(curr + w * MIN_DIST) {
-                    queue.push(Reverse((loss, 0, (curr + w, Dir::DO), path.clone())));
+                    queue.push(Reverse((loss, 0, (curr + w, Dir::DO))));
                 }
             }
         }
@@ -192,26 +192,26 @@ pub fn part2(inp: &str) -> i64 {
     let end = (last + 1) * DIRS * MAX_STRAIGHT;
 
     let min = visited[start..end].iter().min().unwrap();
-    let pos = visited[start..end]
-        .iter()
-        .zip(paths[start..end].iter())
-        .position(|(v1, v2)| v1 == min && !v2.is_empty())
-        .unwrap();
-    let path_taken: HashMap<usize, Dir> = HashMap::from_iter(paths[start + pos].clone());
-
-    for i in 0..map.len() {
-        print!(
-            "{}",
-            match path_taken.get(&i) {
-                None => format!("{}", map[i] as char),
-                Some(Dir::RI) => ">".to_string().red(),
-                Some(Dir::UP) => "^".to_string().red(),
-                Some(Dir::DO) => "V".to_string().red(),
-                Some(Dir::LE) => "<".to_string().red(),
-            }
-        );
-    }
-    println!();
+    // let pos = visited[start..end]
+    //     .iter()
+    //     .zip(paths[start..end].iter())
+    //     .position(|(v1, v2)| v1 == min && !v2.is_empty())
+    //     .unwrap();
+    // let path_taken: HashMap<usize, Dir> = HashMap::from_iter(paths[start + pos].clone());
+    //
+    // for i in 0..map.len() {
+    //     print!(
+    //         "{}",
+    //         match path_taken.get(&i) {
+    //             None => format!("{}", map[i] as char),
+    //             Some(Dir::RI) => ">".to_string().red(),
+    //             Some(Dir::UP) => "^".to_string().red(),
+    //             Some(Dir::DO) => "V".to_string().red(),
+    //             Some(Dir::LE) => "<".to_string().red(),
+    //         }
+    //     );
+    // }
+    // println!();
 
     *min as i64 - (map[0] - b'0') as i64
 }
@@ -242,7 +242,7 @@ fn main() {
         let start1 = Instant::now();
         println!("part1 {}", part1(&reader));
         let start2 = Instant::now();
-        // println!("part2 {}", part2(&reader));
+        println!("part2 {}", part2(&reader));
         let finish = start2.elapsed();
 
         println!("time1 {:?}, time2 {:?}", start2 - start1, finish);
